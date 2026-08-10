@@ -3,6 +3,10 @@
    Dark charcoal foundation · warm amber light · warm off-white text
    --------------------------------------------------------------- */
 
+/* Self-hosted fonts (Geist + Geist Mono, variable) — no third-party requests */
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+
 :root {
   --bg: #131109;
   --bg-raised: #1a1710;
@@ -14,8 +18,8 @@
   --line: #2c2617;
   --line-strong: #453b22;
 
-  --sans: "Avenir Next", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-  --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  --sans: "Geist Variable", "Geist", system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --mono: "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   --space-section: clamp(4.5rem, 10vw, 8rem);
   --mx: 50%;
