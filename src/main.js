@@ -1,4 +1,4 @@
-/* StackMoth — minimal progressive enhancement.
+/* StackMoth: minimal progressive enhancement.
    The page is fully usable without this script. */
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');

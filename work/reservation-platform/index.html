@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reservation platform case study | StackMoth</title>
+  <meta name="description" content="A multi-tenant court booking and payment platform running two live basketball facilities in Sri Lanka: three-layer double-booking defence in PostgreSQL, multi-merchant payment routing, and a payment-incident subsystem built after a real money incident.">
+  <link rel="canonical" href="https://stackmoth.com/work/reservation-platform/">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#131109">
+
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="StackMoth">
+  <meta property="og:title" content="Reservation platform case study | StackMoth">
+  <meta property="og:description" content="A multi-tenant court booking and payment platform running two live basketball facilities in Sri Lanka: three-layer double-booking defence in PostgreSQL, multi-merchant payment routing, and a payment-incident subsystem built after a real money incident.">
+  <meta property="og:url" content="https://stackmoth.com/work/reservation-platform/">
+  <meta property="og:image" content="https://stackmoth.com/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Reservation platform case study | StackMoth">
+  <meta name="twitter:description" content="A multi-tenant court booking and payment platform running two live basketball facilities in Sri Lanka: three-layer double-booking defence in PostgreSQL, multi-merchant payment routing, and a payment-incident subsystem built after a real money incident.">
+  <meta name="twitter:image" content="https://stackmoth.com/og.png">
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <a class="brand" href="/" aria-label="StackMoth home">
+        <svg class="brand__mark" viewBox="0 0 64 64" width="30" height="30" aria-hidden="true" focusable="false">
+          <g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M31 16 L23 5"/>
+            <path d="M33 16 L41 5"/>
+            <path d="M32 14.5 L34.6 18 L32 21.5 L29.4 18 Z" fill="currentColor" stroke="none"/>
+            <path d="M29.8 22 L34.2 22 L33.1 47 L32 50.5 L30.9 47 Z" fill="currentColor" stroke="none"/>
+            <path d="M29.5 23.5 L8 8 L3 26.5 L10.5 34.5 L28 35.5 Z"/>
+            <path d="M34.5 23.5 L56 8 L61 26.5 L53.5 34.5 L36 35.5 Z"/>
+            <path d="M27.8 38 L13 42 L17.5 53.5 L28.8 45.5 Z"/>
+            <path d="M36.2 38 L51 42 L46.5 53.5 L35.2 45.5 Z"/>
+          </g>
+        </svg>
+        <span class="brand__word">StackMoth</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="/#capabilities">Capabilities</a>
+        <a href="/work/">Work</a>
+        <a href="/#approach">Approach</a>
+        <a href="/#contact">Contact</a>
+      </nav>
+      <a class="btn btn--small btn--primary site-header__cta" href="mailto:lahiru@stackmoth.com?subject=Project%20inquiry%3A%20StackMoth">Start a project</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <article class="case">
+      <div class="container page-head">
+        <p class="crumb"><a href="/">StackMoth</a><span>/</span><a href="/work/">Work</a><span>/</span>Reservation platform</p>
+        <p class="eyebrow">Booking &amp; payments</p>
+        <h1>A booking platform that refuses to sell the same court twice</h1>
+        <p class="lede">A reservation, billing and front-desk platform for a Colombo basketball facility operator, live and taking money daily. The interesting engineering is not the booking form. It is everything that makes a double booking impossible.</p>
+        <dl class="case-facts">
+          <div><dt>Client</dt><dd>A Colombo basketball facility operator</dd></div>
+          <div><dt>Period</dt><dd>Dec 2024 to Aug 2026, 21 months</dd></div>
+          <div><dt>Scale</dt><dd>About 48,000 lines, 215 commits</dd></div>
+          <div><dt>In production</dt><dd>1,558 registered users, 3 locations, 9 courts</dd></div>
+          <div><dt>Stack</dt><dd>Express 4.21, TypeScript, Next.js 15, React 18, PostgreSQL</dd></div>
+          <div><dt>Payments</dt><dd>Dialog Genie IPG, multi-merchant</dd></div>
+          <div><dt>Tests</dt><dd>274 backend tests</dd></div>
+          <div><dt>Access</dt><dd>Live and in daily use. Not linked publicly.</dd></div>
+        </dl>
+        <p class="hero__actions">
+          <a class="btn btn--ghost" href="/work/">All case studies</a>
+        </p>
+      </div>
+
+      <div class="container case-body">
+        <h2>The problem is physical, not clerical</h2>
+        <p class="keynote">
+          A court sold twice is not a scheduling annoyance. It is two paying customers
+          standing on the same floor at the same time, and a front desk with no good answer.
+        </p>
+        <p>
+          Half-court and full-court reservations overlap. Two bookings that look completely
+          different in the interface can be the same physical space, so the rule the system
+          has to hold is not "no duplicate rows" but "no overlapping claim on the same court".
+        </p>
+
+        <h2>Double booking is refused three times over</h2>
+        <p>
+          The platform does not rely on a single check. Three independent layers have to fail
+          before a conflicting reservation can exist:
+        </p>
+        <ul>
+          <li><strong>A transaction-scoped advisory lock.</strong> <code>pg_advisory_xact_lock</code> serialises requests that could collide, so two simultaneous bookings for the same slot are considered one after the other rather than at once.</li>
+          <li><strong>Two overlapping partial unique indexes.</strong> Half-court and full-court exclusion is encoded as a database invariant. The rule holds even if the application is bypassed entirely, and it survives any future code that forgets it exists.</li>
+          <li><strong>Clean failure at the boundary.</strong> A <code>23505</code> unique violation is translated into an HTTP 400, so the last line of defence still produces a comprehensible error rather than a 500.</li>
+        </ul>
+        <p>
+          There is no Redis and no external lock service. The concurrency primitives are
+          PostgreSQL's own, which is a deliberate trade recorded in the repository's
+          documentation under its known production risks rather than left implicit.
+        </p>
+
+        <h2>Money settles to the right company</h2>
+        <p>
+          The facilities are operated by different legal entities, so payment routing is a
+          correctness problem, not a configuration detail. Payments run through Dialog Genie
+          with merchant selection driven by location, so funds settle to the company that
+          actually owns the booking.
+        </p>
+        <ul>
+          <li>The server re-queries the payment provider for the authoritative result. Webhooks are treated as a hint to go and look, never as the source of truth.</li>
+          <li>Webhook verification is HMAC-SHA256 with a five-minute replay window, compared using <code>timingSafeEqual</code>.</li>
+        </ul>
+
+        <h2>What a real money incident changed</h2>
+        <p>
+          In July 2026 a payment incident put a set of transactions into a state the system
+          could not describe. The response was a subsystem, not a patch:
+        </p>
+        <ul>
+          <li>A classification taxonomy, so an incident has a type rather than a comment thread.</li>
+          <li>An idempotent incident ledger, so replaying a reconciliation cannot double-count it.</li>
+          <li>A <code>received_under_review</code> state, so the system never tells a customer that a payment failed while their money may in fact have moved.</li>
+          <li>A <code>cancellation_source</code> provenance column, so every cancellation records who or what caused it.</li>
+        </ul>
+        <p>
+          The reconciliation that followed covered 46 transactions and is documented in the
+          repository rather than in someone's memory.
+        </p>
+
+        <h2>One deadline, one definition</h2>
+        <p>
+          A single shared SQL fragment defines the payment deadline. The deadline shown to
+          the customer and the deadline enforced by the system are the same expression, so
+          they cannot drift apart through an edit to one and not the other.
+        </p>
+
+        <h2>Tested where it would actually break</h2>
+        <p>
+          274 backend tests, including tests that assert on generated SQL text. That is an
+          unusual thing to test, and it exists for a specific reason: a refactor that quietly
+          drops an advisory lock or a partial index would otherwise still pass a suite that
+          only checks behaviour under low concurrency.
+        </p>
+        <p class="case-attrib">
+          AI-assisted, human-accountable. AI tools contributed significantly to the
+          implementation described here. The specification, the review of every change,
+          the production operation and the accountability are mine.
+        </p>
+        <div class="case-next">
+          <p class="case-next__note">Next case study</p>
+          <a class="btn btn--ghost" href="/work/courtres/">CourtRes</a>
+        </div>
+      </div>
+    </article>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <a class="brand" href="/" aria-label="StackMoth, back to home">
+        <svg class="brand__mark" viewBox="0 0 64 64" width="24" height="24" aria-hidden="true" focusable="false">
+          <g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M31 16 L23 5"/>
+            <path d="M33 16 L41 5"/>
+            <path d="M32 14.5 L34.6 18 L32 21.5 L29.4 18 Z" fill="currentColor" stroke="none"/>
+            <path d="M29.8 22 L34.2 22 L33.1 47 L32 50.5 L30.9 47 Z" fill="currentColor" stroke="none"/>
+            <path d="M29.5 23.5 L8 8 L3 26.5 L10.5 34.5 L28 35.5 Z"/>
+            <path d="M34.5 23.5 L56 8 L61 26.5 L53.5 34.5 L36 35.5 Z"/>
+            <path d="M27.8 38 L13 42 L17.5 53.5 L28.8 45.5 Z"/>
+            <path d="M36.2 38 L51 42 L46.5 53.5 L35.2 45.5 Z"/>
+          </g>
+        </svg>
+        <span class="brand__word">StackMoth</span>
+      </a>
+      <p class="site-footer__tag">Software, automation &amp; connected systems.</p>
+      <nav class="site-footer__links" aria-label="Footer">
+        <a href="mailto:lahiru@stackmoth.com">Email</a>
+        <a href="/work/">Work</a>
+        <a href="https://github.com/lahiruhet">GitHub</a>
+      </nav>
+      <p class="site-footer__fine">&copy; <span id="year">2026</span> StackMoth &middot; Lahiru Hettiarachchi &middot; No cookies, no trackers.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

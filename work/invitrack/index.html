@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Invitrack case study | StackMoth</title>
+  <meta name="description" content="A receivables and invoicing system for C S Tours, delivered in about five weeks. Row-level security on all 14 tables, invoice numbers that are never recycled, and a CI pipeline that replays every migration and proves privilege denial on real PostgreSQL.">
+  <link rel="canonical" href="https://stackmoth.com/work/invitrack/">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#131109">
+
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="StackMoth">
+  <meta property="og:title" content="Invitrack case study | StackMoth">
+  <meta property="og:description" content="A receivables and invoicing system for C S Tours, delivered in about five weeks. Row-level security on all 14 tables, invoice numbers that are never recycled, and a CI pipeline that replays every migration and proves privilege denial on real PostgreSQL.">
+  <meta property="og:url" content="https://stackmoth.com/work/invitrack/">
+  <meta property="og:image" content="https://stackmoth.com/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Invitrack case study | StackMoth">
+  <meta name="twitter:description" content="A receivables and invoicing system for C S Tours, delivered in about five weeks. Row-level security on all 14 tables, invoice numbers that are never recycled, and a CI pipeline that replays every migration and proves privilege denial on real PostgreSQL.">
+  <meta name="twitter:image" content="https://stackmoth.com/og.png">
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <a class="brand" href="/" aria-label="StackMoth home">
+        <svg class="brand__mark" viewBox="0 0 64 64" width="30" height="30" aria-hidden="true" focusable="false">
+          <g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M31 16 L23 5"/>
+            <path d="M33 16 L41 5"/>
+            <path d="M32 14.5 L34.6 18 L32 21.5 L29.4 18 Z" fill="currentColor" stroke="none"/>
+            <path d="M29.8 22 L34.2 22 L33.1 47 L32 50.5 L30.9 47 Z" fill="currentColor" stroke="none"/>
+            <path d="M29.5 23.5 L8 8 L3 26.5 L10.5 34.5 L28 35.5 Z"/>
+            <path d="M34.5 23.5 L56 8 L61 26.5 L53.5 34.5 L36 35.5 Z"/>
+            <path d="M27.8 38 L13 42 L17.5 53.5 L28.8 45.5 Z"/>
+            <path d="M36.2 38 L51 42 L46.5 53.5 L35.2 45.5 Z"/>
+          </g>
+        </svg>
+        <span class="brand__word">StackMoth</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="/#capabilities">Capabilities</a>
+        <a href="/work/">Work</a>
+        <a href="/#approach">Approach</a>
+        <a href="/#contact">Contact</a>
+      </nav>
+      <a class="btn btn--small btn--primary site-header__cta" href="mailto:lahiru@stackmoth.com?subject=Project%20inquiry%3A%20StackMoth">Start a project</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <article class="case">
+      <div class="container page-head">
+        <p class="crumb"><a href="/">StackMoth</a><span>/</span><a href="/work/">Work</a><span>/</span>Invitrack</p>
+        <p class="eyebrow">Financial software</p>
+        <h1>Financial integrity enforced in the database, not the application</h1>
+        <p class="lede">Invitrack handles receivables and invoicing for C S Tours (CSTT), a GTel subsidiary running a vehicle fleet. It was delivered in about five weeks, and almost all of the rules that matter live below the application, where a bug in the client cannot reach them.</p>
+        <dl class="case-facts">
+          <div><dt>Client</dt><dd>C S Tours (CSTT), a GTel subsidiary</dd></div>
+          <div><dt>Period</dt><dd>Jul to Aug 2026, about 5 weeks</dd></div>
+          <div><dt>Scale</dt><dd>18,142 lines, 26 commits</dd></div>
+          <div><dt>Database</dt><dd>14 tables, 14 migrations, 5,746 lines of SQL</dd></div>
+          <div><dt>Stack</dt><dd>Next.js 16 App Router, React 19, Supabase, PostgreSQL</dd></div>
+          <div><dt>Tests</dt><dd>89 tests, 22 real-PostgreSQL RLS integration tests</dd></div>
+          <div><dt>CI</dt><dd>Every pull request replays all 14 migrations</dd></div>
+        </dl>
+        <p class="hero__actions">
+          <a class="btn btn--primary" href="https://invoice.cstt.lk" rel="noopener">Open the live system</a>
+          <a class="btn btn--ghost" href="/work/">All case studies</a>
+        </p>
+      </div>
+
+      <div class="container case-body">
+        <h2>Where the rules live</h2>
+        <p class="keynote">
+          A buggy or compromised client still cannot mutate an issued financial record.
+        </p>
+        <p>
+          That guarantee is only worth stating because of where it is implemented. Row-level
+          security is enabled on all 14 tables and expressed through 24 policies, alongside
+          roughly 41 functions, 28 triggers and 3 views. The application is one client of the
+          database among several possible ones, and it holds no special privileges that make
+          it trusted.
+        </p>
+
+        <h2>An invoice number is never recycled</h2>
+        <p>
+          Numbering is two-phase: a number is reserved, then finalised, with idempotency keys
+          so a retry cannot consume two. A reservation that does not complete moves to a
+          <code>failed</code> terminal state and that number stays permanently burned.
+        </p>
+        <p>
+          Reusing a number would be the tidier-looking behaviour. It is also the one that
+          produces two different documents claiming to be the same invoice, which is precisely
+          the situation an audit is designed to catch.
+        </p>
+
+        <h2>The document is checked before the number is spent</h2>
+        <p>
+          PDF preflight runs before number reservation, and the renderer's own output is then
+          verified with <code>pdf-lib</code>, including a page-count check. If the document is
+          wrong the system fails loudly instead of issuing a numbered invoice with financial
+          content clipped off the bottom of a page.
+        </p>
+        <p>
+          Issued PDFs are kept as immutable versioned snapshots, so what the customer received
+          can always be produced again exactly as it was sent.
+        </p>
+
+        <h2>No floating point anywhere near money</h2>
+        <p>
+          Money is fixed-precision, held as BigInt throughout. There is no path in the system
+          where a currency amount passes through a float.
+        </p>
+
+        <h2>CI that proves the claims rather than restating them</h2>
+        <p>
+          This is the only one of these systems with a continuous integration pipeline, and it
+          earns its place. On every pull request it:
+        </p>
+        <ul>
+          <li>Replays all 14 migrations onto a clean PostgreSQL instance, so a migration that only works against an already-migrated database fails immediately.</li>
+          <li>Runs 22 integration tests against real PostgreSQL which impersonate admin, finance and viewer JWTs and assert that the operations each role must not perform are actually denied. Privilege denial is tested as a behaviour, not assumed from reading policies.</li>
+          <li>Gates migration syntax against the real PostgreSQL grammar rather than a regular expression.</li>
+        </ul>
+        <p class="case-attrib">
+          AI-assisted, human-accountable. AI tools contributed significantly to the
+          implementation described here. The specification, the review of every change,
+          the production operation and the accountability are mine.
+        </p>
+        <div class="case-next">
+          <p class="case-next__note">Next case study</p>
+          <a class="btn btn--ghost" href="/work/silk/">SILK</a>
+        </div>
+      </div>
+    </article>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <a class="brand" href="/" aria-label="StackMoth, back to home">
+        <svg class="brand__mark" viewBox="0 0 64 64" width="24" height="24" aria-hidden="true" focusable="false">
+          <g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M31 16 L23 5"/>
+            <path d="M33 16 L41 5"/>
+            <path d="M32 14.5 L34.6 18 L32 21.5 L29.4 18 Z" fill="currentColor" stroke="none"/>
+            <path d="M29.8 22 L34.2 22 L33.1 47 L32 50.5 L30.9 47 Z" fill="currentColor" stroke="none"/>
+            <path d="M29.5 23.5 L8 8 L3 26.5 L10.5 34.5 L28 35.5 Z"/>
+            <path d="M34.5 23.5 L56 8 L61 26.5 L53.5 34.5 L36 35.5 Z"/>
+            <path d="M27.8 38 L13 42 L17.5 53.5 L28.8 45.5 Z"/>
+            <path d="M36.2 38 L51 42 L46.5 53.5 L35.2 45.5 Z"/>
+          </g>
+        </svg>
+        <span class="brand__word">StackMoth</span>
+      </a>
+      <p class="site-footer__tag">Software, automation &amp; connected systems.</p>
+      <nav class="site-footer__links" aria-label="Footer">
+        <a href="mailto:lahiru@stackmoth.com">Email</a>
+        <a href="/work/">Work</a>
+        <a href="https://github.com/lahiruhet">GitHub</a>
+      </nav>
+      <p class="site-footer__fine">&copy; <span id="year">2026</span> StackMoth &middot; Lahiru Hettiarachchi &middot; No cookies, no trackers.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

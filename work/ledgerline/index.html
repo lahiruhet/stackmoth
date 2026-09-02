@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ledgerline case study | StackMoth</title>
+  <meta name="description" content="A private finance and network dashboard running as a Cloudflare Worker on D1, using Cloudflare Access as its only authentication boundary. No passwords, no cookies, no session state.">
+  <link rel="canonical" href="https://stackmoth.com/work/ledgerline/">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#131109">
+
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="StackMoth">
+  <meta property="og:title" content="Ledgerline case study | StackMoth">
+  <meta property="og:description" content="A private finance and network dashboard running as a Cloudflare Worker on D1, using Cloudflare Access as its only authentication boundary. No passwords, no cookies, no session state.">
+  <meta property="og:url" content="https://stackmoth.com/work/ledgerline/">
+  <meta property="og:image" content="https://stackmoth.com/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Ledgerline case study | StackMoth">
+  <meta name="twitter:description" content="A private finance and network dashboard running as a Cloudflare Worker on D1, using Cloudflare Access as its only authentication boundary. No passwords, no cookies, no session state.">
+  <meta name="twitter:image" content="https://stackmoth.com/og.png">
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <a class="brand" href="/" aria-label="StackMoth home">
+        <svg class="brand__mark" viewBox="0 0 64 64" width="30" height="30" aria-hidden="true" focusable="false">
+          <g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M31 16 L23 5"/>
+            <path d="M33 16 L41 5"/>
+            <path d="M32 14.5 L34.6 18 L32 21.5 L29.4 18 Z" fill="currentColor" stroke="none"/>
+            <path d="M29.8 22 L34.2 22 L33.1 47 L32 50.5 L30.9 47 Z" fill="currentColor" stroke="none"/>
+            <path d="M29.5 23.5 L8 8 L3 26.5 L10.5 34.5 L28 35.5 Z"/>
+            <path d="M34.5 23.5 L56 8 L61 26.5 L53.5 34.5 L36 35.5 Z"/>
+            <path d="M27.8 38 L13 42 L17.5 53.5 L28.8 45.5 Z"/>
+            <path d="M36.2 38 L51 42 L46.5 53.5 L35.2 45.5 Z"/>
+          </g>
+        </svg>
+        <span class="brand__word">StackMoth</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="/#capabilities">Capabilities</a>
+        <a href="/work/">Work</a>
+        <a href="/#approach">Approach</a>
+        <a href="/#contact">Contact</a>
+      </nav>
+      <a class="btn btn--small btn--primary site-header__cta" href="mailto:lahiru@stackmoth.com?subject=Project%20inquiry%3A%20StackMoth">Start a project</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <article class="case">
+      <div class="container page-head">
+        <p class="crumb"><a href="/">StackMoth</a><span>/</span><a href="/work/">Work</a><span>/</span>Ledgerline</p>
+        <p class="eyebrow">Personal infrastructure</p>
+        <h1>An owner-only dashboard with no authentication code of its own</h1>
+        <p class="lede">Ledgerline is my own finance and network dashboard. I chose the architecture, the stack and the hosting, and the most useful decision was about what not to build.</p>
+        <dl class="case-facts">
+          <div><dt>Scale</dt><dd>20,500 lines, 17 tables, 31 tests</dd></div>
+          <div><dt>Runtime</dt><dd>Cloudflare Workers, Next.js via vinext</dd></div>
+          <div><dt>Data</dt><dd>Cloudflare D1</dd></div>
+          <div><dt>Authentication</dt><dd>Cloudflare Access, and nothing else</dd></div>
+          <div><dt>Access</dt><dd>Private, owner only</dd></div>
+        </dl>
+        <p class="hero__actions">
+          <a class="btn btn--ghost" href="/work/">All case studies</a>
+        </p>
+      </div>
+
+      <div class="container case-body">
+        <h2>The authentication boundary is not in the application</h2>
+        <p class="keynote">
+          There are no passwords, no cookies and no session state in this codebase, because
+          the application is never reachable by anyone Access has not already identified.
+        </p>
+        <p>
+          Cloudflare Access sits in front of the Worker and is the only authentication
+          boundary. The application does not implement a login, and it cannot be tricked into
+          a weak one, because it has none to weaken. Logout is delegated to the Access
+          endpoint. The Worker fails closed if the Access identity or the configured owner
+          email is missing, so a misconfiguration produces a locked door rather than an open one.
+        </p>
+        <p>
+          For a single-owner application this removes an entire category of vulnerability in
+          exchange for a hard dependency on the platform. That trade is worth naming, and for
+          a private dashboard it is clearly the right one.
+        </p>
+
+        <h2>Money is an integer</h2>
+        <p>
+          Amounts are stored as integer minor units and converted to LKR only at the API
+          boundary. Dates and timestamps are ISO strings, booleans are checked integers, and
+          non-currency decimals are the only place a real number is allowed.
+        </p>
+
+        <h2>Deploys are gated</h2>
+        <p>
+          The build is verified before it ships and deployment runs behind a preflight script,
+          so a broken build fails at my terminal rather than at the edge. Migrations have
+          check, status and apply commands, which matters when the datastore is D1 and there
+          is no second chance at a bad migration.
+        </p>
+        <div class="case-next">
+          <p class="case-next__note">Next case study</p>
+          <a class="btn btn--ghost" href="/work/rainfall/">Rainfall tracker</a>
+        </div>
+      </div>
+    </article>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <a class="brand" href="/" aria-label="StackMoth, back to home">
+        <svg class="brand__mark" viewBox="0 0 64 64" width="24" height="24" aria-hidden="true" focusable="false">
+          <g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M31 16 L23 5"/>
+            <path d="M33 16 L41 5"/>
+            <path d="M32 14.5 L34.6 18 L32 21.5 L29.4 18 Z" fill="currentColor" stroke="none"/>
+            <path d="M29.8 22 L34.2 22 L33.1 47 L32 50.5 L30.9 47 Z" fill="currentColor" stroke="none"/>
+            <path d="M29.5 23.5 L8 8 L3 26.5 L10.5 34.5 L28 35.5 Z"/>
+            <path d="M34.5 23.5 L56 8 L61 26.5 L53.5 34.5 L36 35.5 Z"/>
+            <path d="M27.8 38 L13 42 L17.5 53.5 L28.8 45.5 Z"/>
+            <path d="M36.2 38 L51 42 L46.5 53.5 L35.2 45.5 Z"/>
+          </g>
+        </svg>
+        <span class="brand__word">StackMoth</span>
+      </a>
+      <p class="site-footer__tag">Software, automation &amp; connected systems.</p>
+      <nav class="site-footer__links" aria-label="Footer">
+        <a href="mailto:lahiru@stackmoth.com">Email</a>
+        <a href="/work/">Work</a>
+        <a href="https://github.com/lahiruhet">GitHub</a>
+      </nav>
+      <p class="site-footer__fine">&copy; <span id="year">2026</span> StackMoth &middot; Lahiru Hettiarachchi &middot; No cookies, no trackers.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

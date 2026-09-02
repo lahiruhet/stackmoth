@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CourtRes case study | StackMoth</title>
+  <meta name="description" content="Court lighting automation on a Raspberry Pi and Zigbee, running two venues since 2024. A false-success defect found in the logs led to a positive confirmation protocol that replaced acknowledgement-based success.">
+  <link rel="canonical" href="https://stackmoth.com/work/courtres/">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#131109">
+
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="StackMoth">
+  <meta property="og:title" content="CourtRes case study | StackMoth">
+  <meta property="og:description" content="Court lighting automation on a Raspberry Pi and Zigbee, running two venues since 2024. A false-success defect found in the logs led to a positive confirmation protocol that replaced acknowledgement-based success.">
+  <meta property="og:url" content="https://stackmoth.com/work/courtres/">
+  <meta property="og:image" content="https://stackmoth.com/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CourtRes case study | StackMoth">
+  <meta name="twitter:description" content="Court lighting automation on a Raspberry Pi and Zigbee, running two venues since 2024. A false-success defect found in the logs led to a positive confirmation protocol that replaced acknowledgement-based success.">
+  <meta name="twitter:image" content="https://stackmoth.com/og.png">
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <a class="brand" href="/" aria-label="StackMoth home">
+        <svg class="brand__mark" viewBox="0 0 64 64" width="30" height="30" aria-hidden="true" focusable="false">
+          <g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M31 16 L23 5"/>
+            <path d="M33 16 L41 5"/>
+            <path d="M32 14.5 L34.6 18 L32 21.5 L29.4 18 Z" fill="currentColor" stroke="none"/>
+            <path d="M29.8 22 L34.2 22 L33.1 47 L32 50.5 L30.9 47 Z" fill="currentColor" stroke="none"/>
+            <path d="M29.5 23.5 L8 8 L3 26.5 L10.5 34.5 L28 35.5 Z"/>
+            <path d="M34.5 23.5 L56 8 L61 26.5 L53.5 34.5 L36 35.5 Z"/>
+            <path d="M27.8 38 L13 42 L17.5 53.5 L28.8 45.5 Z"/>
+            <path d="M36.2 38 L51 42 L46.5 53.5 L35.2 45.5 Z"/>
+          </g>
+        </svg>
+        <span class="brand__word">StackMoth</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="/#capabilities">Capabilities</a>
+        <a href="/work/">Work</a>
+        <a href="/#approach">Approach</a>
+        <a href="/#contact">Contact</a>
+      </nav>
+      <a class="btn btn--small btn--primary site-header__cta" href="mailto:lahiru@stackmoth.com?subject=Project%20inquiry%3A%20StackMoth">Start a project</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <article class="case">
+      <div class="container page-head">
+        <p class="crumb"><a href="/">StackMoth</a><span>/</span><a href="/work/">Work</a><span>/</span>CourtRes</p>
+        <p class="eyebrow">IoT &amp; automation</p>
+        <h1>When the logs said the lights went off and the radio said otherwise</h1>
+        <p class="lede">CourtRes schedules and switches floodlighting at two sports venues. It has run unattended since 2024. The defect worth writing about is one it used to have.</p>
+        <dl class="case-facts">
+          <div><dt>Period</dt><dd>Nov 2024 to Sep 2026</dd></div>
+          <div><dt>Scale</dt><dd>5,500 lines of Python, 30 commits</dd></div>
+          <div><dt>Deployment</dt><dd>Two venues, unattended</dd></div>
+          <div><dt>Hardware</dt><dd>Raspberry Pi 3B, Sonoff ZBDongle-E, 3 relays, 2 lux sensors</dd></div>
+          <div><dt>Transport</dt><dd>Zigbee via zigbee2mqtt and MQTT</dd></div>
+          <div><dt>Tests</dt><dd>116 tests</dd></div>
+        </dl>
+        <p class="hero__actions">
+          <a class="btn btn--ghost" href="/work/">All case studies</a>
+        </p>
+      </div>
+
+      <div class="container case-body">
+        <h2>A success that was not one</h2>
+        <p>
+          Two lines from the same second of the same log file, found while reading through
+          an unremarkable morning's output:
+        </p>
+        <pre class="excerpt">08:25:35.954   Full Court light confirmed off
+08:25:36       genOnOff.off ... timed out after 10000ms</pre>
+        <p class="keynote">
+          The application reported success 0.85 seconds before the radio gave up trying.
+        </p>
+        <p>
+          Nothing crashed and nothing alerted. The system had been treating an acknowledged
+          command as a completed one, and an acknowledgement only proves that the message was
+          accepted for delivery. It proves nothing about the light. In the failure case the
+          floodlights stayed on and the log insisted they were off.
+        </p>
+
+        <h2>Positive confirmation replaced acknowledgement</h2>
+        <p>
+          Command acknowledgement was removed as a success signal entirely. The system now
+          waits for the device to republish its own state, requires that report to be strictly
+          newer than the command that caused it, and raises on timeout or on disagreement.
+          A light is off when the light says it is off.
+        </p>
+        <p>
+          The confirmation timeout is 12 seconds, chosen deliberately to sit above
+          zigbee2mqtt's own 10 second ZCL timeout. If the two were closer, the confirmation
+          could expire while the transport was still legitimately retrying, and the system
+          would trade false successes for false failures.
+        </p>
+
+        <h2>Failures that are reported nowhere else</h2>
+        <p>
+          Some radio-level problems appear only on the zigbee2mqtt bridge logging topic and
+          on no device topic at all. The system subscribes to it, so a class of failure that
+          is otherwise completely silent becomes visible.
+        </p>
+
+        <h2>The lux gate fails closed</h2>
+        <p>
+          Ambient light readings decide whether the floodlights are needed. Readings go stale,
+          and a stale reading is more dangerous than no reading, because it looks valid.
+          Freshness is tiered at 15, 20 and 30 minutes with per-sensor calibration, and when
+          the data is too old the system refuses to act rather than guessing from the last
+          number it saw.
+        </p>
+
+        <h2>Choices made against the site, not the datasheet</h2>
+        <ul>
+          <li><strong>Zigbee on channel 11</strong>, chosen against the venue's Wi-Fi on channel 9, so the two do not contend for the same part of the 2.4 GHz band.</li>
+          <li><strong>Inrush staggering</strong> at T-15, T-10 and T, so banks of floodlights do not strike simultaneously.</li>
+          <li><strong>Multi-process-safe rotating logs</strong> with interprocess file locking and peer-rotation detection, and atomic status snapshots written through <code>os.replace</code>, so a reader never sees a half-written file.</li>
+          <li><strong>systemd-managed with automatic restart</strong>, running as a non-root user.</li>
+        </ul>
+
+        <h2>The client can check the devices without a VPN</h2>
+        <p>
+          Device state is published over MQTT and surfaced on a small access-gated web
+          dashboard the client opens in a browser. The alternative was installing a VPN client
+          on their machines, which works right up until the one time they need to check
+          something and are not sitting at that particular desk. A page behind an access gate
+          costs nothing to use and nothing to support.
+        </p>
+
+        <h2>The transport abstraction, proven rather than asserted</h2>
+        <p>
+          The system moved from Wi-Fi relays to Zigbee in July 2026 after the relays began
+          failing intermittently. In the migration commit the main application file has a diff
+          of zero lines. The abstraction was load-bearing, and swapping the entire radio layer
+          demonstrated it. No unrecovered switching failure since.
+        </p>
+        <p class="case-attrib">
+          AI-assisted, human-accountable. AI tools contributed significantly to the
+          implementation described here. The specification, the review of every change,
+          the production operation and the accountability are mine.
+        </p>
+        <div class="case-next">
+          <p class="case-next__note">Next case study</p>
+          <a class="btn btn--ghost" href="/work/invitrack/">Invitrack</a>
+        </div>
+      </div>
+    </article>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <a class="brand" href="/" aria-label="StackMoth, back to home">
+        <svg class="brand__mark" viewBox="0 0 64 64" width="24" height="24" aria-hidden="true" focusable="false">
+          <g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M31 16 L23 5"/>
+            <path d="M33 16 L41 5"/>
+            <path d="M32 14.5 L34.6 18 L32 21.5 L29.4 18 Z" fill="currentColor" stroke="none"/>
+            <path d="M29.8 22 L34.2 22 L33.1 47 L32 50.5 L30.9 47 Z" fill="currentColor" stroke="none"/>
+            <path d="M29.5 23.5 L8 8 L3 26.5 L10.5 34.5 L28 35.5 Z"/>
+            <path d="M34.5 23.5 L56 8 L61 26.5 L53.5 34.5 L36 35.5 Z"/>
+            <path d="M27.8 38 L13 42 L17.5 53.5 L28.8 45.5 Z"/>
+            <path d="M36.2 38 L51 42 L46.5 53.5 L35.2 45.5 Z"/>
+          </g>
+        </svg>
+        <span class="brand__word">StackMoth</span>
+      </a>
+      <p class="site-footer__tag">Software, automation &amp; connected systems.</p>
+      <nav class="site-footer__links" aria-label="Footer">
+        <a href="mailto:lahiru@stackmoth.com">Email</a>
+        <a href="/work/">Work</a>
+        <a href="https://github.com/lahiruhet">GitHub</a>
+      </nav>
+      <p class="site-footer__fine">&copy; <span id="year">2026</span> StackMoth &middot; Lahiru Hettiarachchi &middot; No cookies, no trackers.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

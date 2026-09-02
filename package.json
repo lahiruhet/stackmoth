@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "StackMoth landing page — software, automation & connected systems.",
+  "description": "StackMoth landing page: software, automation and connected systems.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
