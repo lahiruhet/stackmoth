@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import { cpSync, readdirSync, statSync } from 'node:fs';
+import { readdirSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const SITE = 'https://stackmoth.com';
@@ -21,25 +21,7 @@ const routes = [
   ['/', resolve(__dirname, 'index.html')],
   ['/work/', resolve(__dirname, 'work/index.html')],
   ...workSlugs.map((slug) => [`/work/${slug}/`, resolve(__dirname, 'work', slug, 'index.html')]),
-  ['/rainfall/', resolve(__dirname, 'rainfall/index.html')],
 ];
-
-// The rainfall tracker keeps its original project layout under rainfall/ so its
-// own tests and nightly generator run unchanged. Only the files a browser needs
-// are published; scripts/, test/ and package.json stay out of dist.
-const RAINFALL_PUBLISHED = ['index.html', 'app.js', 'lib', 'vendor', 'data'];
-
-function rainfall() {
-  return {
-    name: 'stackmoth-rainfall',
-    writeBundle(options) {
-      const out = resolve(options.dir, 'rainfall');
-      for (const entry of RAINFALL_PUBLISHED) {
-        cpSync(resolve(__dirname, 'rainfall', entry), resolve(out, entry), { recursive: true });
-      }
-    },
-  };
-}
 
 // Built from the same list as the inputs above, so the sitemap cannot drift out
 // of step with the pages that actually ship.
@@ -64,7 +46,7 @@ function sitemap() {
 }
 
 export default defineConfig({
-  plugins: [sitemap(), rainfall()],
+  plugins: [sitemap()],
   build: {
     rollupOptions: {
       input: {

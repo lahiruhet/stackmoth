@@ -1,0 +1,4 @@
+# The rainfall tracker moved to its own site. Keep old links and shared gauge
+# URLs working.
+/rainfall      https://rain.stackmoth.com/        301
+/rainfall/*    https://rain.stackmoth.com/:splat  301
